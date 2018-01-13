@@ -12,7 +12,9 @@ global userslist
 global userSocket
 userslist = []
 userSocket = []
-indice_user = 1
+for loop in range(50):
+	userSocket.append(0)
+indice_user = [0]
 
 
 class Users:
@@ -30,9 +32,8 @@ class ClientThread(Thread):
 		self.socket = socket
 		self.ip = ip
 		self.port = port
-		self.numero = indice_user
-		print "Nouvelle connexion: utilisateur",indice_user
-		indice_user = indice_user+1
+		self.numero = indice_user[0]
+		print "Nouvelle connexion: utilisateur",indice_user[0]
 		self.socket.send(b"Bonjour le peuple j'accepte la connexion")
 
 	def run(self):
@@ -43,16 +44,18 @@ class ClientThread(Thread):
 		self.socket.send(b"Tu es l'utilisateur "), self.socket.send(user.pseudo.encode()), self.socket.send(b" c'est cela ?")
 		msg_recu = b""
 		while msg_recu != b"fin":		#On continue tant que le client n'a pas dit fin
+			if msg_recu == b"fin":
+				break
 			msg_recu = self.socket.recv(1024)
 			msg_recu = msg_recu.decode()
-			if msg_recu == b"fin":
-				for j in range(0,len(userSocket)):
-					if userSocket[j] == self.numero:
-						userSocket.pop(j)
-				self.socket.close()
-			else:
-				nouveauMessageThread = MessageThread(self.socket, user, msg_recu)
-				nouveauMessageThread.start()
+			nouveauMessageThread = MessageThread(self.socket, user, msg_recu)
+			nouveauMessageThread.start()
+		indice_user[0] = indice_user[0] - 1
+		if msg_recu == b"fin":
+			print "L'utilisateur", user.pseudo, "est parti"
+			userSocket[self.numero] = 0
+			self.socket.close()
+
 
 
 class MessageThread(Thread):
@@ -71,12 +74,12 @@ class MessageThread(Thread):
 		textLog.close()
 		i = 0
 		for i in range(0, len(userSocket)):
-			if i==self.user.numero-1:
-				pass
-			else:
-				textLog = open('logtext.txt', 'r')
+			textLog = open('logtext.txt', 'r')
+			try:
 				userSocket[i].send(textLog.readline())
 				textLog.close()
+			except:
+				self.socket.close()
 			if i == len(userSocket):
 				break
 

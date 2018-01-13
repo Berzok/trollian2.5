@@ -14,9 +14,14 @@ class LeThread(Thread):
 		self.co_serveur = co_serveur
 		self.msg_a_envoyer = msg_a_envoyer
 	def run(self):
-		self.co_serveur.send(msg_a_envoyer)
-		msg_recu = self.co_serveur.recv(1024)
-		print msg_recu.decode()
+		if self.msg_a_envoyer == b"fin":
+			self.co_serveur.send(self.msg_a_envoyer)
+			self.co_serveur.close()
+			print "Fermeture de la connexion précédemment établie, au revoir"
+		else:
+			self.co_serveur.send(self.msg_a_envoyer)
+			msg_recu = self.co_serveur.recv(1024)
+			print msg_recu.decode()
 
 
 #On constr8t la connexion de la même manière, c'est-à-dire:
@@ -46,9 +51,6 @@ while msg_a_envoyer != b"fin":
 	msg_a_envoyer = msg_a_envoyer.encode()
 	anotherThread = LeThread(co_serveur, msg_a_envoyer)
 	anotherThread.start()
-
-print "Fermeture de la connexion précédemment établie, au revoir"
-co_serveur.close()
 
 
 
