@@ -1,11 +1,13 @@
 #coding: utf-8
 import os
 import socket
+from interface import *
 from threading import Thread
 os.system('clear')
 
 hote = "localhost"
 port = 12800
+
 
 
 class LeThread(Thread):
@@ -31,17 +33,32 @@ co_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #On utilise la méthode connect(), avec en paramètre les mêmes que bind()
 co_serveur.connect((hote, port))
-print "Connexion établie avec le serveur", hote,"sur le port",port
+
 
 #On utilise la méthode recv() afin de recevoir la chaîne de bytes envoyée par send()
 rcv_msg = co_serveur.recv(1024)			#1024 donc taille max du message de 1024 caractères
-print rcv_msg
+if int(rcv_msg) == 1:
+	print "Erreur. Connexion impossible."
+else:
+	print "Connexion établie avec le serveur", hote,"sur le port",port
 print ""
 
 #On choisit un pseudo (et ce à chaque connexion)
 pseudo = raw_input("Veuillez choisir un nom d'utilisateur: ")
+
+#On envoie le pseudo du client au serveur
 co_serveur.send(pseudo.encode())
+
+
+#On reçoit le message du serveur qui nous dit coucou
 print co_serveur.recv(1024)
+
+
+
+#On reçoit la usersList de la part du serveur
+listeUtilisateurs = []
+#while True:
+#	listeUtilisateurs.append() = co_serveur.recv(1024).decode()
 
 
 msg_a_envoyer = b""
@@ -53,4 +70,9 @@ while msg_a_envoyer != b"fin":
 	anotherThread.start()
 
 
-
+rcv_msg = co_serveur.recv(1024)
+if int(rcv_msg) == 1:
+	print "Erreur."
+else:
+	print "Fermeture de la connexion précédemment établie. Au revoir."
+	co_serveur.close()

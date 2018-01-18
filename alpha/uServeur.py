@@ -8,9 +8,9 @@ from threading import Thread, RLock
 hote = ''
 port = 12800
 global indice_user
-global userslist
+global usersList
 global userSocket
-userslist = []
+usersList = []
 userSocket = []
 for loop in range(50):
 	userSocket.append(0)
@@ -24,37 +24,54 @@ class Users:
 		self.ip = ip
 		self.port = port
 		self.numero = numero
+	def envoyerGens(self, usersList):
+		envoi = []
+		arret = 0
+		for elth, valeur in enumerate(usersList):
+			print valeur
+			envoi.append(valeur)
+		return envoi
+
+
+class ActualiserGensThread(Thread):
+	def __init__(self, user, usersList):
+		Thread.__init__(self)
+#		self.user.
+
+
 
 
 class ClientThread(Thread):
-	def __init__(self, socket, ip, port, indice_user):
+	def __init__(self, socket, ip, port, indice_user, user):
 		Thread.__init__(self)
 		self.socket = socket
 		self.ip = ip
 		self.port = port
 		self.numero = indice_user[0]
+		self.user = user
 		print "Nouvelle connexion: utilisateur",indice_user[0]
 		self.socket.send(b"Bonjour le peuple j'accepte la connexion")
 
 	def run(self):
-		user = "user"+str(self.numero)
 		print self.ip, self.port
 		print ""
-		user = Users(self.socket.recv(1024).decode(), self.numero, self.socket, self.ip, self.port)
-		self.socket.send(b"Tu es l'utilisateur "), self.socket.send(user.pseudo.encode()), self.socket.send(b" c'est cela ?")
 		msg_recu = b""
 		while msg_recu != b"fin":		#On continue tant que le client n'a pas dit fin
 			if msg_recu == b"fin":
 				break
 			msg_recu = self.socket.recv(1024)
 			msg_recu = msg_recu.decode()
-			nouveauMessageThread = MessageThread(self.socket, user, msg_recu)
+			if msg_recu == b"fin":
+				break
+			print "longueur de usersList:", len(usersList)
+			nouveauMessageThread = MessageThread(self.socket, self.user, msg_recu)
 			nouveauMessageThread.start()
 		indice_user[0] = indice_user[0] - 1
 		if msg_recu == b"fin":
-			print "L'utilisateur", user.pseudo, "est parti"
+			print "L'utilisateur", self.user.pseudo, "est parti"
 			userSocket[self.numero] = 0
 			self.socket.close()
+			return
 
 
 
@@ -66,7 +83,7 @@ class MessageThread(Thread):
 		self.message = message
 	def run(self):
 		print "fonction partager pour ", self.user.pseudo
-		print "population actuelle: ", len(userSocket)
+		print "population actuelle: ", len(usersList)
 		print ""
 		self.message = "["+self.user.pseudo+"] " + self.message
 		textLog = open('logtext.txt', 'w')
@@ -79,7 +96,7 @@ class MessageThread(Thread):
 				userSocket[i].send(textLog.readline())
 				textLog.close()
 			except:
-				self.socket.close()
+				pass
 			if i == len(userSocket):
 				break
 
@@ -99,13 +116,6 @@ def init_serv():
 
 
 ############NOUVEAU CLIENT CONNECTÉ
-def connexion_client(userslist):
-	i = 0
-	if userslist[i]:
-		while userslist[i]:
-			i = i+1
-	userslist[i] = "user"+str(i)
-	return i
 
 
 
